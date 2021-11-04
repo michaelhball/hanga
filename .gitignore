@@ -1,0 +1,14 @@
+.ipynb_checkpoints
+__pycache__
+
+.history
+
+in
+out
+
+TODO.txt
+
+*.mp4
+*.mp3
+*.wav
+*.WAV
