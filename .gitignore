@@ -5,6 +5,7 @@ __pycache__
 
 in
 out
+works
 
 TODO.txt
 
@@ -12,3 +13,5 @@ TODO.txt
 *.mp3
 *.wav
 *.WAV
+
+.DS_STORE
