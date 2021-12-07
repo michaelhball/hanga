@@ -4,6 +4,7 @@ from typing import Tuple
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import PIL
 
 
 class ImageFormat(enum.Enum):
@@ -33,6 +34,11 @@ def imshow3(img1: np.ndarray, img2: np.ndarray, img3: np.ndarray):
 
 
 # TODO: make a plot grid function
+
+
+def np_to_pil(frame: np.ndarray) -> PIL.Image:
+    color_frame = cv2.cvtColor(np.float32(frame), cv2.COLOR_BGR2RGB)
+    return PIL.Image.fromarray(np.uint8(color_frame)).convert("RGB")
 
 
 def mirror(img: np.ndarray, axis: int = 0, colour_format: ImageFormat = ImageFormat.BGR) -> np.ndarray:
