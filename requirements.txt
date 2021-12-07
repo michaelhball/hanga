@@ -2,5 +2,6 @@ imageio==2.13.1
 librosa==0.8.1
 numpy==1.20.3
 opencv-python==4.5.4.60
+pre-commit==2.16.0
 pydub==0.25.1
 tqdm==4.62.3
