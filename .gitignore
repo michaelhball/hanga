@@ -12,3 +12,5 @@ TODO.txt
 *.mp3
 *.wav
 *.WAV
+
+.DS_STORE
