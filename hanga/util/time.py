@@ -2,7 +2,7 @@ from functools import singledispatch
 
 
 def to_s(minutes: int, seconds: float) -> float:
-    return minutes * 60 + seconds
+    return (minutes * 60) + seconds
 
 
 @singledispatch
