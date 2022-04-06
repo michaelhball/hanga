@@ -16,3 +16,5 @@ TODO.txt
 .DS_STORE
 
 works/*.ipynb
+
+data/*

@@ -3,6 +3,7 @@ import functools
 import os
 import tempfile
 
+import IPython.display as ipd
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,9 +18,10 @@ def bpm_to_fps(bpm: float) -> float:
 
 
 class AudioFormat(enum.Enum):
-    WAV = enum.auto()
-    OGG = enum.auto()
-    FLAC = enum.auto()
+    WAV = "wav"
+    OGG = "ogg"
+    FLAC = "flac"
+    MP3 = "mp3"
 
 
 class Track:
@@ -46,9 +48,9 @@ class Track:
         NB: if no audio_format is specified, this func attempts to work out the
         format from the file_path.
         """
-        audio_format = None if audio_format is None else audio_format.name
+        audio_format = None if audio_format is None else audio_format.name.lower()
         audio_segment = pydub.AudioSegment.from_file(file_path, format=audio_format)
-        snippet = audio_segment[int(h_util.to_ms(start)) : int(h_util.to_ms(end))]
+        snippet = audio_segment[int(h_util.s_to_ms(start)) : int(h_util.s_to_ms(end))]
         # use tmp_dir only if not passed a save_path
         with tempfile.TemporaryDirectory() as tmp_dir:
             if save_path is None:
@@ -59,7 +61,7 @@ class Track:
     @functools.cached_property
     def duration(self):
         # TODO: add different formatting options here
-        return librosa.get_duration(self.y)
+        return librosa.get_duration(y=self.y)
 
     @functools.cached_property
     def onset_env(self):
@@ -84,6 +86,9 @@ class Track:
     @functools.cached_property
     def beat_times(self):
         return librosa.frames_to_time(self.beats, sr=self.sr)
+
+    def display(self):
+        return ipd.Audio(self.y, rate=self.sr)
 
     def plot_beats(self, hop_length=512, t_min=-1, t_max=float("inf")):
         # TODO: create a proper figure here rather than directly using plt
