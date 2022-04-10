@@ -1,0 +1,1 @@
+model & ops taken from https://github.com/JCBrouwer/maua-stylegan2/
