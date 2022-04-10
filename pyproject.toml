@@ -1,2 +1,37 @@
+[tool.poetry]
+name = "hanga"
+version = "0.0.3"
+description = "hanga (verb): to make, build, fashion, create"
+license = "GPL-3.0-only"
+authors = ["mhsb <michael.h.s.ball@gmail.com>"]
+homepage = 'https://github.com/michaelhball/hanga'
+repository = 'https://github.com/michaelhball/hanga'
+readme = "README.md"
+keywords = ['audiovisual', 'gan', 'generative']
+include = ["LICENSE"]
+
+[tool.poetry.dependencies]
+python = ">=3.7,<4.0"
+Cython = "0.29.28"
+ffmpeg-python = "0.2.0"
+imageio = "2.16.1"
+imageio-ffmpeg = "0.4.5"
+librosa = "0.9.1"
+madmom = "0.16.1"
+matplotlib = "3.5.1"
+numpy = "1.21.5"
+opencv-python = "4.5.5.64"
+pre-commit = "2.18.1"
+pydub = "0.25.1"
+torch = "1.10.2"
+tqdm = "4.63.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "7.1.1"
+
+[build-system]
+requires = ["poetry-core>=1.1.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 120
