@@ -1,5 +1,4 @@
 import enum
-import functools
 import os
 import tempfile
 from typing import Optional
@@ -13,6 +12,7 @@ import pydub
 import scipy.signal
 import soundfile as sf
 import torch
+from backports.cached_property import cached_property
 
 from hanga import util as h_util
 
@@ -90,16 +90,16 @@ class Track:
             snippet.export(save_path, format="wav")
             return cls.from_file(save_path, use_onset=use_onset)
 
-    @functools.cached_property
+    @cached_property
     def duration(self):
         # TODO: add different formatting options here
         return librosa.get_duration(y=self.y)
 
-    @functools.cached_property
+    @cached_property
     def onset_env(self):
         return librosa.onset.onset_strength(self.y, sr=self.sr, aggregate=np.median)
 
-    @functools.cached_property
+    @cached_property
     def tempo(self):
         if self.use_onset:
             tempo, _ = librosa.beat.beat_track(onset_envelope=self.onset_env, sr=self.sr)
@@ -107,7 +107,7 @@ class Track:
             tempo, _ = librosa.beat.beat_track(y=self.y, sr=self.sr)
         return tempo
 
-    @functools.cached_property
+    @cached_property
     def beats(self):
         if self.use_onset:
             _, beats = librosa.beat.beat_track(onset_envelope=self.onset_env, sr=self.sr)
@@ -115,7 +115,7 @@ class Track:
             _, beats = librosa.beat.beat_track(y=self.y, sr=self.sr)
         return beats
 
-    @functools.cached_property
+    @cached_property
     def beat_times(self):
         return librosa.frames_to_time(self.beats, sr=self.sr)
 

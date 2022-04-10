@@ -12,6 +12,7 @@ include = ["LICENSE"]
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
+backports.cached_property = "1.0.1"
 Cython = "0.29.28"
 ffmpeg-python = "0.2.0"
 imageio = "2.16.1"
