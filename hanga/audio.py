@@ -96,8 +96,17 @@ class Track:
         return librosa.get_duration(y=self.y)
 
     @cached_property
-    def onset_env(self):
-        return librosa.onset.onset_strength(self.y, sr=self.sr, aggregate=np.median)
+    def y_perc(self):
+        return librosa.effects.percussive(self.y)
+
+    @cached_property
+    def y_harm(self):
+        return librosa.effects.harmonic(self.y)
+
+    @cached_property
+    def onset_env(self, use_percussive: bool = True) -> np.ndarray:
+        y = self.y if not use_percussive else self.y_perc
+        return librosa.onset.onset_strength(y, sr=self.sr, aggregate=np.median)
 
     @cached_property
     def tempo(self):
