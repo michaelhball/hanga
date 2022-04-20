@@ -56,6 +56,7 @@ class PyDubTrack(BaseTrack):
     # TODO: add the remaining util functions
 
 
+# TODO: rename to LibrosaTrack & clean up the methods here
 class Track:
     def __init__(self, y: np.ndarray, sr: int, use_onset: bool = False):
         self.y = y
@@ -130,6 +131,14 @@ class Track:
 
     def display(self):
         return ipd.Audio(self.y, rate=self.sr)
+
+    def plot_onsets(self):
+        fig, ax = plt.subplots()
+        times = librosa.times_like(self.onset_env, sr=self.sr)
+        ax.plot(times, self.onset_env, label="onset strength")
+        ax.set_xlabel("time (s)")
+        ax.grid(visible=True)
+        return fig
 
     def plot_beats(self, hop_length=512, t_min=-1, t_max=float("inf")):
         # TODO: create a proper figure here rather than directly using plt
