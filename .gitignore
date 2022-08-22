@@ -14,3 +14,7 @@ TODO.txt
 *.WAV
 
 .DS_STORE
+
+works/*.ipynb
+
+data/*
