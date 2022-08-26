@@ -1,7 +1,8 @@
 import enum
 import os
 import tempfile
-from typing import Optional
+from abc import ABC, abstractmethod
+from typing import Any, Optional, Type, TypeVar
 
 import IPython.display as ipd
 import librosa
@@ -14,7 +15,7 @@ import soundfile as sf
 import torch
 from backports.cached_property import cached_property
 
-from hanga import util as h_util
+from hanga.util import signal_util, time_util
 
 
 def bpm_to_fps(bpm: float) -> float:
@@ -28,68 +29,113 @@ class AudioFormat(enum.Enum):
     MP3 = "mp3"
 
 
-# define a base class API here
-class BaseTrack:
-    pass
+_Track = TypeVar("_Track", bound="Track")
 
 
-class PyDubTrack(BaseTrack):
-    def __init__(self, y: pydub.AudioSegment):
-        self.y = self.y
+class Track(ABC):
+    # the audio signal (whose format depends on the track implementation)
+    y: Any
+
+    # sampling rate (doesn't have to be used)
+    sr: Optional[int]
+
+    # whether or not to use track onsets in feature extraction
+    use_onset: bool
+
+    # TODO: make this non-optional by forcing the Librosa track to also do it
+    audio_format: Optional[AudioFormat]
 
     @classmethod
-    def from_file(
+    @abstractmethod
+    def from_file(cls: Type[_Track], file_path: str) -> _Track:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def from_file_snippet(cls: Type[_Track], file_path: str, start_time: float, end_time: float) -> _Track:
+        ...
+
+    @abstractmethod
+    def save(self, save_path: str, audio_format: Optional[AudioFormat]):
+        """Serializes the _Track to a file"""
+        ...
+
+    @abstractmethod
+    def display(self):
+        """Displays the _Track in a Jupyter environment"""
+        ...
+
+    @cached_property
+    @abstractmethod
+    def duration(self) -> float:
+        ...
+
+    @cached_property
+    @abstractmethod
+    def bpm(self) -> float:
+        ...
+
+
+class PyDubTrack(_Track):
+    def __init__(self, y: pydub.AudioSegment, sr: Optional[int], audio_format: Optional[AudioFormat]):
+        self.y = y
+        self.sr = sr
+        self.audio_format = audio_format
+
+    @classmethod
+    def from_file(cls, file_path: str, audio_format: Optional[AudioFormat] = None):
+        audio_format_str = None if audio_format is None else audio_format.name.lower()
+        audio_segment = pydub.AudioSegment.from_file(file_path, format=audio_format_str)
+        # TODO: can I also extract the sample rate? (is it 'sample_width')
+        return cls(y=audio_segment, audio_format=audio_format)
+
+    @classmethod
+    def from_file_snippet(
         cls,
         file_path: str,
+        start_time: float,
+        end_time: float,
         audio_format: Optional[AudioFormat] = None,
-        start_time: Optional[float] = None,
-        end_time: Optional[float] = None,
     ):
-        audio_format = None if audio_format is None else audio_format.name.lower()
-        audio_segment = pydub.AudioSegment.from_file(file_path, format=audio_format)
-        # TODO:
-        # audio_segment = audio_segment[int(h_util.s_to_ms(start_time)) : int(h_util.s_to_ms(end_time))]
-        # TODO: work out if I can also get sample rate
-        return cls(y=audio_segment)
+        track = cls.from_file(file_path, audio_format=audio_format)
+        track.y = track.y[int(time_util.s_to_ms(start_time)) : int(time_util.s_to_ms(end_time))]
+        return track
 
-    # TODO: add a function to convert to Librosa and VV
-    # TODO: add the remaining util functions
+    def save(self, save_path: str):
+        self.y.export(save_path, format=self.audio_format)
+
+    # TODO: add a function that converts —> a Librosa track (because that's how all our useful functions are defined)
 
 
-# TODO: rename to LibrosaTrack & clean up the methods here
-class Track:
+class LibrosaTrack:
     def __init__(self, y: np.ndarray, sr: int, use_onset: bool = False):
         self.y = y
         self.sr = sr
         self.use_onset = use_onset
 
     @classmethod
-    def from_file(cls, file_path: str, use_onset: bool = False) -> "Track":
+    def from_file(cls, file_path: str, use_onset: bool = False):
         return cls(*librosa.load(file_path), use_onset=use_onset)
 
     @classmethod
     def from_file_snippet(
         cls,
         file_path: str,
-        start: float,
-        end: float,
-        audio_format: AudioFormat = None,
+        start_time: float,
+        end_time: float,
         use_onset: bool = False,
-        save_path: str = None,
-    ) -> "Track":
-        """Loads an audio track between specified times (in seconds).
-        NB: if no audio_format is specified, this func attempts to work out the
-        format from the file_path.
-        """
-        audio_format = None if audio_format is None else audio_format.name.lower()
-        audio_segment = pydub.AudioSegment.from_file(file_path, format=audio_format)
-        snippet = audio_segment[int(h_util.s_to_ms(start)) : int(h_util.s_to_ms(end))]
-        # use tmp_dir only if not passed a save_path
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            if save_path is None:
-                save_path = os.path.join(tmp_dir, "tmp.wav")
-            snippet.export(save_path, format="wav")
-            return cls.from_file(save_path, use_onset=use_onset)
+        audio_format: Optional[AudioFormat] = None,
+        save_path: Optional[str] = None,
+    ):
+        tmp_dir = None
+        if save_path is None:
+            tmp_dir = tempfile.TemporaryDirectory()
+            save_path = os.path.join(tmp_dir, "tmp.wav")
+        PyDubTrack.from_file_snippet(file_path, start_time, end_time, audio_format).save(save_path)
+        track = cls.from_file(save_path, use_onset=use_onset)
+        if tmp_dir is not None:
+            tmp_dir.cleanup()
+        return track
 
     @cached_property
     def duration(self):
@@ -156,21 +202,19 @@ class Track:
         # TODO: work out how to get the same time range for beats here ?? DAFUQ
         # plt.vlines(librosa.frames_to_time(self.beats, sr=self.sr), 0, 1, alpha=0.5, color='r', linestyle='--', label='Beats')
 
-    def save(self, save_dir: str, file_name: str, audio_format: AudioFormat = AudioFormat.WAV):
-        """Save audio track (librosa ndarray) to disk.
+    def save(self, save_path: str, audio_format: AudioFormat = AudioFormat.WAV):
+        """Save audio track (Librosa ndarray) to disk.
+
         Args:
-            save_dir: dir in which to save audio file
-            file_name: file name (excluding extension)
+            save_path: dir in which to save audio file
             audio_format: valid file format
         """
-        file_path = os.path.join(save_dir, f"{file_name}.{audio_format.name.lower()}")
-        subtype = "vorbis" if audio_format == audio_format.OGG else "PCM_24"
         sf.write(
-            file_path,
+            save_path,
             data=self.y,
             samplerate=self.sr,
             format=audio_format.name,
-            subtype=subtype,
+            subtype="vorbis" if audio_format == audio_format.OGG else "PCM_24",
         )
 
 
@@ -224,8 +268,8 @@ def onsets(
         )
     onset = np.clip(scipy.signal.resample(onset, n_frames), onset.min(), onset.max())
     onset = torch.from_numpy(onset).float()
-    onset = h_util.gaussian_filter(onset, smooth, causal=0)
-    onset = h_util.percentile_clip(onset, clip)
+    onset = signal_util.gaussian_filter(onset, smooth, causal=0)
+    onset = signal_util.percentile_clip(onset, clip)
     onset = onset**power
     return onset
 
