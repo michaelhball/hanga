@@ -70,6 +70,7 @@ def denoising_loop(
     text_embeddings,
     latents,
     guidance_scale: float,
+    output_dir: Optional[str] = None,
     save_freq: Optional[int] = None,
 ):
     """"""
@@ -97,9 +98,8 @@ def denoising_loop(
             # compute the previous noisy sample x_t -> x_t-1
             latents = scheduler.step(noise_pred, i, latents)["prev_sample"]
 
-            if save_freq is not None and i % save_freq == 0:
-                # TODO: how to pass a path here
-                pass
+            if output_dir is not None and save_freq is not None and i % save_freq == 0:
+                pickle.dump(latents, pathlib.Path(f"{output_dir}/latents_{i}.pklz").open("wb"))
 
     return latents
 
@@ -177,6 +177,7 @@ def gen_from_seed_and_prompt(
         text_embeddings=text_embeddings,
         latents=init_latents,
         guidance_scale=guidance_scale,
+        output_dir=output_dir,
         save_freq=save_freq,
     )
     doot = get_vae_output(vae, doot)
