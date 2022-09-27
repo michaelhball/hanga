@@ -9,6 +9,9 @@ from torch import autocast
 from tqdm.auto import tqdm
 
 
+# TODO: convert this into a pipeline / class instead so the various models can be reused
+
+
 def get_init_latents(
     scheduler,
     batch_size: int,
@@ -183,7 +186,12 @@ def gen_from_seed_and_prompt(
     doot = get_vae_output(vae, doot)
     pil_image = vae_output_to_pil(doot)
 
+    if output_dir is not None:
+        pil_image.save(f"{output_dir}/output.png")
+
     if display_:
         print(seed)
         # display(pil_image.resize((256, 256)))
         display(pil_image)
+
+    return pil_image
