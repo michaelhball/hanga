@@ -75,10 +75,15 @@ def denoising_loop(
     guidance_scale: float,
     output_dir: Optional[str] = None,
     save_freq: Optional[int] = None,
+    verbose: bool = False,
 ):
     """"""
+    to_loop = enumerate(scheduler.timesteps)
+    if verbose:
+        to_loop = tqdm(to_loop, total=len(to_loop))
+
     with autocast("cuda"):
-        for i, t in tqdm(enumerate(scheduler.timesteps), total=len(scheduler.timesteps)):
+        for i, t in to_loop:
 
             # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
             latent_model_input = torch.cat([latents] * 2)
