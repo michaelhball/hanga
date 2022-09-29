@@ -78,7 +78,7 @@ def denoising_loop(
 ):
     """"""
     with autocast("cuda"):
-        for i, t in tqdm(enumerate(scheduler.timesteps), total=scheduler.timesteps):
+        for i, t in tqdm(enumerate(scheduler.timesteps), total=len(scheduler.timesteps)):
 
             # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
             latent_model_input = torch.cat([latents] * 2)
