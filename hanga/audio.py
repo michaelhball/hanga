@@ -76,8 +76,8 @@ class Track(ABC):
         ...
 
 
-class PyDubTrack(_Track):
-    def __init__(self, y: pydub.AudioSegment, sr: Optional[int], audio_format: Optional[AudioFormat]):
+class PyDubTrack(Track):
+    def __init__(self, y: pydub.AudioSegment, sr: Optional[int] = None, audio_format: Optional[AudioFormat] = None):
         self.y = y
         self.sr = sr
         self.audio_format = audio_format
@@ -102,12 +102,23 @@ class PyDubTrack(_Track):
         return track
 
     def save(self, save_path: str):
-        self.y.export(save_path, format=self.audio_format)
+        self.y.export(save_path, format=self.audio_format or "wav")
 
     # TODO: add a function that converts —> a Librosa track (because that's how all our useful functions are defined)
 
+    def display(self):
+        return self.y
 
-class LibrosaTrack:
+    @cached_property
+    def duration(self):
+        pass
+
+    @cached_property
+    def bpm(self):
+        pass
+
+
+class LibrosaTrack(Track):
     def __init__(self, y: np.ndarray, sr: int, use_onset: bool = False):
         self.y = y
         self.sr = sr
@@ -130,7 +141,7 @@ class LibrosaTrack:
         tmp_dir = None
         if save_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
-            save_path = os.path.join(tmp_dir, "tmp.wav")
+            save_path = os.path.join(tmp_dir.name, "tmp.wav")
         PyDubTrack.from_file_snippet(file_path, start_time, end_time, audio_format).save(save_path)
         track = cls.from_file(save_path, use_onset=use_onset)
         if tmp_dir is not None:
