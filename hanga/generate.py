@@ -339,7 +339,6 @@ class SDPipeline:
 
     def pipeline(
         self,
-        prompts: List[str],
         seed: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -348,8 +347,9 @@ class SDPipeline:
         output_dir: Optional[str] = None,
         save_freq: Optional[int] = None,
         verbose: bool = False,
-        text_embeddings=None,
         init_latents=None,
+        prompts: Optional[List[str]] = None,
+        text_embeddings=None,
     ):
         """"""
 
@@ -359,6 +359,9 @@ class SDPipeline:
         guidance_scale = guidance_scale or self.guidance_scale
 
         if text_embeddings is None:
+            assert (
+                prompts is not None
+            ), "You must pass either `prompts` or pre-computed `text_embeddings` to the pipeline"
             text_embeddings = self.get_text_embeddings(prompts)
         if init_latents is None:
             init_latents = self.get_init_latents(height=height, width=width, seed=seed)
