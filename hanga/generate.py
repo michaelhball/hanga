@@ -203,6 +203,7 @@ class SDPipeline:
         text_encoder,
         vae,
         # TODO: can I pass these things later
+        num_inference_steps: int = 50,
         batch_size: int = 1,
         height: int = 512,
         width: int = 512,
@@ -215,6 +216,10 @@ class SDPipeline:
         self.tokenizer = tokenizer
         self.text_encoder = text_encoder
         self.vae = vae
+
+        # initialise scheduler with chosen num_inference_steps. This will compute the sigmas and exact time step values to be
+        # used during the denoising process
+        self.scheduler.set_timesteps(num_inference_steps)
 
         # TODO: we SHOULD use batch_size more effectively when on the bigger GPUs to increase rendering speed
         self.batch_size = batch_size
