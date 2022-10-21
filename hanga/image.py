@@ -1,5 +1,5 @@
 import enum
-from typing import Tuple
+from typing import List, Tuple
 
 import cv2
 import matplotlib.pyplot as plt
@@ -102,3 +102,15 @@ def white_image(shape: Tuple[int, int, int]) -> np.ndarray:
 
 def black_image(shape: Tuple[int, int, int]) -> np.ndarray:
     return np.zeros(shape, dtype=np.float32)
+
+
+def image_grid(imgs: List[np.ndarray], rows: int, cols: int) -> PIL.Image:
+    assert len(imgs) == rows * cols
+
+    w, h = imgs[0].size
+    grid = PIL.Image.new("RGB", size=(cols * w, rows * h))
+    grid_w, grid_h = grid.size
+
+    for i, img in enumerate(imgs):
+        grid.paste(img, box=(i % cols * w, i // cols * h))
+    return grid

@@ -68,3 +68,7 @@ def display_video(file_path: str) -> HTML:
     """
         % data_uri
     )
+
+def create_and_display_video(frames: List[np.ndarray], output_path: str, fps: int=30) -> HTML:
+    create_video(frames, output_file_path=output_path, fps=fps, convert=False)
+    return display_video(output_path)
