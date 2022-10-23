@@ -9,7 +9,7 @@ from hanga.util import file_util
 
 
 class SDPipeline:
-    """"""
+    """Pipeline for generating images using Stable Diffusion with the diffusers library."""
 
     # TODO: add other entrypoints (e.g. doing different kinds of interpolations, doing a partial pipeline)
 
@@ -111,6 +111,7 @@ class SDPipeline:
         verbose: bool = False,
     ) -> torch.tensor:
         """"""
+
         guidance_scale = guidance_scale or self.guidance_scale
 
         with autocast("cuda"):
@@ -148,6 +149,7 @@ class SDPipeline:
 
     def get_vae_output(self, latents):
         """Use the VAE to decode the latents back into an image, incl. scaling"""
+
         with torch.no_grad():
             return self.vae.decode(1 / 0.18215 * latents)
 
@@ -175,7 +177,7 @@ class SDPipeline:
         prompts: Optional[List[str]] = None,
         text_embeddings=None,
     ):
-        """"""
+        """Full (configurable) pipeline, from seed to image."""
 
         seed = seed or self.seed
         height = height or self.height
