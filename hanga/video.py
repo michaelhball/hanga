@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE
 from typing import List
 
 import cv2
+import ffmpeg
 import imageio
 import numpy as np
 from IPython.display import HTML
@@ -72,3 +73,10 @@ def display_video(file_path: str) -> HTML:
 def create_and_display_video(frames: List[np.ndarray], output_path: str, fps: int=30) -> HTML:
     create_video(frames, output_file_path=output_path, fps=fps, convert=False)
     return display_video(output_path)
+
+
+def audiovisualise(video_file: str, audio_file: str, output_file: str, overwrite_output: bool = False):
+    input_video = ffmpeg.input(video_file)
+    input_audio = ffmpeg.input(audio_file)
+    out = ffmpeg.output(input_video, input_audio, output_file, vcodec='copy', acodec='aac', strict='experimental', loglevel='quiet')
+    out.run()
