@@ -21,7 +21,6 @@ class SDPipeline:
         tokenizer,
         text_encoder,
         vae,
-        # TODO: can I pass these things later
         num_inference_steps: int = 50,
         batch_size: int = 1,
         height: int = 512,
@@ -36,8 +35,8 @@ class SDPipeline:
         self.text_encoder = text_encoder
         self.vae = vae
 
-        # initialise scheduler with chosen num_inference_steps. This will compute the sigmas and exact time step values to be
-        # used during the denoising process
+        # initialise scheduler with chosen num_inference_steps. This computes the sigmas and exact
+        # timestep values to be used during the denoising process.
         self.scheduler.set_timesteps(num_inference_steps)
 
         # TODO: we SHOULD use batch_size more effectively when on the bigger GPUs to increase rendering speed
@@ -140,10 +139,10 @@ class SDPipeline:
                 noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_text - noise_pred_uncond)
 
                 # compute the previous noisy sample x_t -> x_t-1
-                latents = self.scheduler.step(noise_pred, i, latents)["prev_sample"]
+                latents: torch.Tensor = self.scheduler.step(noise_pred, i, latents)["prev_sample"]
 
                 if output_dir is not None and save_freq is not None and i % save_freq == 0:
-                    file_util.save_pickle(latents, f"{output_dir}/latents_{i}.pklz")
+                    file_util.save_pickle(latents.cpu(), f"{output_dir}/latents_{i}.pklz")
 
         return latents
 
@@ -169,6 +168,7 @@ class SDPipeline:
         height: Optional[int] = None,
         width: Optional[int] = None,
         guidance_scale: Optional[float] = None,
+        num_inference_steps: Optional[int] = None,
         return_latents: bool = False,
         output_dir: Optional[str] = None,
         save_freq: Optional[int] = None,
@@ -183,6 +183,10 @@ class SDPipeline:
         height = height or self.height
         width = width or self.width
         guidance_scale = guidance_scale or self.guidance_scale
+
+        # NB: beware this changes the scheduler "state" for future pipeline runs
+        if num_inference_steps is not None:
+            self.scheduler.set_timesteps(num_inference_steps)
 
         if text_embeddings is None:
             assert (

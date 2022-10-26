@@ -7,4 +7,4 @@ def s_to_ms(seconds: float) -> float:
 
 
 def to_ms(minutes: float, seconds: float):
-    raise 1000 * to_s(minutes, seconds)
+    return 1000 * to_s(minutes, seconds)
